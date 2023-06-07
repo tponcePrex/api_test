@@ -1,3 +1,4 @@
+target/
 target/.rustc_info.json
 target/CACHEDIR.TAG
 target/debug/.cargo-lock
@@ -3093,3 +3094,12 @@ target/debug/incremental/api_test-f8a9s95i5neb/s-glo91svmyc-1a59tow-26nl18o91je7
 .idea/api_test.iml
 .idea/modules.xml
 .idea/vcs.xml
+target/debug/incremental/api_test-2c7rrkzrcwz9m/s-glo94cpw1d-gnbsr2.lock
+target/debug/incremental/api_test-2c7rrkzrcwz9m/s-glo94cpw1d-gnbsr2-11duw70ha52zj/dep-graph.bin
+target/debug/incremental/api_test-2c7rrkzrcwz9m/s-glo94cpw1d-gnbsr2-11duw70ha52zj/query-cache.bin
+target/debug/incremental/api_test-2c7rrkzrcwz9m/s-glo94cpw1d-gnbsr2-11duw70ha52zj/work-products.bin
+target/debug/incremental/api_test-f8a9s95i5neb/s-glo94cpw05-qnlhpw.lock
+target/debug/incremental/api_test-f8a9s95i5neb/s-glo94cpw05-qnlhpw-1qpvism3a591n/dep-graph.bin
+target/debug/incremental/api_test-f8a9s95i5neb/s-glo94cpw05-qnlhpw-1qpvism3a591n/query-cache.bin
+target/debug/incremental/api_test-f8a9s95i5neb/s-glo94cpw05-qnlhpw-1qpvism3a591n/work-products.bin
+/target/
