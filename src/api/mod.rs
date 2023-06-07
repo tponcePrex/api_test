@@ -1,6 +1,6 @@
 use actix_web::{get, HttpResponse, Responder, web};
 use actix_web::http::StatusCode;
-use chrono::Utc;
+use chrono::Local;
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 const AUTHOR: &str = env!("CARGO_PKG_AUTHORS");
@@ -19,8 +19,16 @@ pub(crate) async fn hello_service() -> impl Responder {
 
 #[get("/alive")]
 pub(crate) async fn alive() -> HttpResponse {
-    let curr_time = Utc::now().date_naive();
+    let curr_datetime = Local::now();
     HttpResponse::Ok().body(
-        format!("Alive here man\nCurrent time: {curr_time}\nVersion: {VERSION}\nAuthor: {AUTHOR}")
+        format!(
+            "Alive here man\n\
+            Current date: {}\n\
+            Current time: {}\n\
+            Version: {VERSION}\n\
+            Author: {AUTHOR}",
+            curr_datetime.date_naive(),
+            curr_datetime.time().format("%H:%M:%S"),
+        )
     )
 }
