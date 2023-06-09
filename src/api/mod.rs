@@ -1,34 +1,22 @@
-use actix_web::{get, HttpResponse, Responder, web};
-use actix_web::http::StatusCode;
-use chrono::Local;
+use actix_web::{App, HttpServer, web};
+use crate::config::data::{EnvironmentConfig};
 
-const VERSION: &str = env!("CARGO_PKG_VERSION");
-const AUTHOR: &str = env!("CARGO_PKG_AUTHORS");
+pub(crate) mod services;
 
-pub fn config(cfg: &mut web::ServiceConfig) {
-    cfg.service(hello_service)
-        .service(alive);
-}
+pub(crate) async fn api_start() -> std::io::Result<()> {
 
-#[get("/hello_service")]
-pub(crate) async fn hello_service() -> impl Responder {
-    //HttpResponse::Ok().body("Sup, dude").finish()
-    let hello = String::from("Hello");
-    hello.customize().with_status(StatusCode::OK)
-}
+    HttpServer::new(move || {
+        //let logger = Logger::default();
+        App::new()
+            //.wrap(logger)
+            .service(
+                web::scope("/api")
+                    .configure(services::config)
+            )
+    })
+        .bind(EnvironmentConfig::instance().get_api_bind().await)?
+        .run()
+        .await?;
 
-#[get("/alive")]
-pub(crate) async fn alive() -> HttpResponse {
-    let curr_datetime = Local::now();
-    HttpResponse::Ok().body(
-        format!(
-            "Alive here man\n\
-            Current date: {}\n\
-            Current time: {}\n\
-            Version: {VERSION}\n\
-            Author: {AUTHOR}",
-            curr_datetime.date_naive(),
-            curr_datetime.time().format("%H:%M:%S"),
-        )
-    )
+    Ok(())
 }
