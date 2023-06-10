@@ -24,6 +24,7 @@ impl EnvironmentConfig {
 
     pub fn new() -> Self {
         Self {
+            //  Will panic if can't open file
             inner: RwLock::new(Self::load().unwrap())
         }
     }
@@ -33,15 +34,12 @@ impl EnvironmentConfig {
         let file = File::open("config/config.json")
             //.map_err(|e| new_error!(e, ErrorTypes::OpenFile))?;
             //  TODO: find a way to map the error into a custom error
-            .unwrap();
+            .map_err(|e| std::io::Error::new(InvalidData, format!("{e}")))?;
 
-        //serde_json::from_reader::<_, EnvironmentConfigInner>(file).map_err(|e| new_error!(e, ErrorTypes::JsonParse))
-        //let asd = serde_json::from_reader::<_, EnvironmentConfigInner>(file);
         //  TODO: same here, map the error into a custom error
-        if let Ok(config) = serde_json::from_reader::<_, EnvironmentConfigInner>(file) {
-            Ok(config)
-        } else {
-            Err(std::io::Error::new(InvalidData, "Invalid data"))
+        match serde_json::from_reader::<_, EnvironmentConfigInner>(file) {
+            Ok(config) => Ok(config),
+            Err(e) => Err(std::io::Error::new(InvalidData, format!("{e}")))
         }
     }
 

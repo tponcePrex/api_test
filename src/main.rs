@@ -3,7 +3,7 @@
 mod api;
 mod config;
 mod user_data;
-mod data;
+mod datatypes;
 mod traits;
 
 #[actix_rt::main]

@@ -1,8 +1,10 @@
 use std::collections::HashMap;
-use std::ops::Deref;
 use lazy_static::lazy_static;
+use serde::{Deserialize, Serialize};
 use tokio::sync::RwLock;
-use crate::data::{UserIdType, UserScoreType};
+use crate::datatypes::{ResponseCodes, UserIdType, UserScoreType};
+use crate::traits;
+use crate::traits::ReplaceableUser;
 
 pub(crate) mod user;
 lazy_static!{
@@ -17,23 +19,70 @@ pub struct UserDataPatch {
     score: UserScoreType
 }
 
-pub struct UserData {
-    inner: RwLock<UserDataInner>
+impl UserDataPatch {
+    pub fn new(
+        id: UserIdType,
+        hash: String,
+        questions: HashMap<u8, QuestionsStatus>,
+        score: UserScoreType
+    ) -> Self {
+        Self {
+            id,
+            hash,
+            questions,
+            score
+        }
+    }
 }
 
-#[derive(Default, Clone, Debug, PartialEq)]
-struct UserDataInner {
+pub struct UserData {
+    pub inner: RwLock<UserDataInner>
+}
+
+#[derive(Default, Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct UserDataInner {
     id: UserIdType,
     hash: String,
     questions: HashMap<u8, QuestionsStatus>,
     score: UserScoreType
 }
-#[derive(Default, Clone, Debug, PartialEq)]
-struct QuestionsStatus {
+
+impl ReplaceableUser for UserDataInner {
+    type UpdateData = UserDataPatch;
+
+    fn update_user_data(&mut self, update_data: Self::UpdateData) -> bool {
+        let mut modified = false;
+        traits::update_data_value(&mut self.id, Some(update_data.id), &mut modified);
+        traits::update_data_value(&mut self.hash, Some(update_data.hash), &mut modified);
+        traits::update_data_value(&mut self.questions, Some(update_data.questions), &mut modified);
+        traits::update_data_value(&mut self.score, Some(update_data.score), &mut modified);
+
+        modified
+    }
+}
+
+#[derive(Default, Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct QuestionsStatus {
     question: Option<String>,
     is_correct: Option<bool>,
     right_answer: Option<String>,
     user_answer: Option<String>
+}
+
+impl QuestionsStatus {
+    pub fn new(
+        question: Option<String>,
+        is_correct: Option<bool>,
+        right_answer: Option<String>,
+        user_answer: Option<String>
+    ) -> Self {
+        Self {
+            question,
+            is_correct,
+            right_answer,
+            user_answer
+        }
+    }
 }
 
 impl UserData {
@@ -43,9 +92,13 @@ impl UserData {
         }
     }
 
-    fn instance() -> &'static Self { &USER_DATA }
+    pub fn instance() -> &'static Self { &USER_DATA }
 
-    async fn reset(&mut self) {
+    pub fn get_inner() -> &'static RwLock<UserDataInner> {
+        &Self::instance().inner
+    }
+
+    async fn reset_user_data(&mut self) {
         let mut current_user_data = self.inner.write().await;
         current_user_data.id = UserIdType::default();
         current_user_data.hash = String::from("");
@@ -53,13 +106,16 @@ impl UserData {
         current_user_data.score = UserScoreType::default();
     }
 
-    async fn update_ser(new_user_data: UserDataPatch) -> std::io::Result<UserDataPatch> {
+    pub async fn update_user(new_user_data: UserDataPatch) -> std::io::Result<ResponseCodes> {
 
-        let user_data = UserData::instance().inner.read().await.deref();
+        let mut user_data = Self::instance().inner.write().await;
 
-        if user_data == new_user_data {  }
+        let modified = user_data.update_user_data(new_user_data);
 
-
-        Ok(new_user_data)
+        if modified {
+            Ok(ResponseCodes::Ok)
+        } else {
+            Ok(ResponseCodes::NotModified)
+        }
     }
 }
