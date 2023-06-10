@@ -1,6 +1,6 @@
 {
   "api_url": "127.0.0.1",
   "api_port": "8090",
-  "online_api_url": "https://api.api-ninjas.com/v1/trivia",
+  "online_api_url": "https://api.api-ninjas.com/v1/",
   "online_api_token": "rPmSGJ/l3zCkWdIskzBnmw==nxKmGehTFaPNuNfr"
 }

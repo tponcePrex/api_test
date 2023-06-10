@@ -1,5 +1,5 @@
 use actix_web::{App, HttpServer, web};
-use crate::config::data::{EnvironmentConfig};
+use crate::config::environment::{EnvironmentConfig};
 
 pub(crate) mod services;
 

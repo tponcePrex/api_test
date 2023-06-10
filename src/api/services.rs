@@ -3,11 +3,16 @@ use std::ops::Deref;
 use actix_web::{get, HttpResponse, web};
 use actix_web::http::{StatusCode};
 use chrono::Local;
-use crate::config::data::{EnvironmentConfig};
+use serde::Deserialize;
+use crate::config::environment::{EnvironmentConfig};
 use crate::user_data::{QuestionsStatus, UserData, UserDataPatch};
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 const AUTHOR: &str = env!("CARGO_PKG_AUTHORS");
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////// SERVICE CONFIG ///////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////
 
 pub fn config(cfg: &mut web::ServiceConfig) {
     cfg.service(get_trivia_data)
@@ -15,12 +20,32 @@ pub fn config(cfg: &mut web::ServiceConfig) {
         .service(get_user_data);
 }
 
-#[get("/trivia_data")]
-pub(crate) async fn get_trivia_data() -> HttpResponse {
+////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////   STRUCTS   ////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+#[derive(Deserialize)]
+struct NinjaApiDataType {
+    data_type: String
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////   ENDPOINTS   ///////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+#[get("/get_ninja_data/{data_type}")]
+async fn get_trivia_data(path: web::Path<NinjaApiDataType>) -> HttpResponse {
+
+    let api_data = path.into_inner();
 
     let client = reqwest::Client::new();
 
-    match client.get(EnvironmentConfig::instance().get_online_api_url().await)
+    let url = match get_ninja_url(api_data.data_type).await {
+        Ok(url) => url,
+        Err(e) => return HttpResponse::BadGateway().body(format!("Bad gateway: {e}"))
+    };
+
+    match client.get(url)
         .header("X-Api-Key", EnvironmentConfig::instance().get_online_api_token().await)
         //rPmSGJ/l3zCkWdIskzBnmw==nxKmGehTFaPNuNfr
         .send()
@@ -89,4 +114,16 @@ async fn get_user_data() -> HttpResponse {
         Ok(user_data) => HttpResponse::Ok().content_type("application/json").body(user_data),
         Err(e) => HttpResponse::BadGateway().body(format!("Bad gateway: {e}"))
     }
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////   FUNCTIONS   ///////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+/// **Description**: Returns the url to access the Ninja API according to the endpoint that is being requested
+async fn get_ninja_url(suffix: String) -> std::io::Result<String> {
+    let mut url = EnvironmentConfig::instance().get_online_api_url().await;
+    url.push_str(suffix.as_str());
+
+    Ok(url)
 }
