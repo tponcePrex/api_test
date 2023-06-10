@@ -7,12 +7,12 @@ const VERSION: &str = env!("CARGO_PKG_VERSION");
 const AUTHOR: &str = env!("CARGO_PKG_AUTHORS");
 
 pub fn config(cfg: &mut web::ServiceConfig) {
-    cfg.service(hello_service)
+    cfg.service(get_trivia_data)
         .service(alive);
 }
 
-#[get("/data_service")]
-pub(crate) async fn hello_service() -> impl Responder {
+#[get("/trivia_data")]
+pub(crate) async fn get_trivia_data() -> impl Responder {
     //HttpResponse::Ok().body("Sup, dude").finish()
 
     let client = reqwest::Client::new();
